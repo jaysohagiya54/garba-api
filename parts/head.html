@@ -200,8 +200,6 @@ h1 em{font-style:italic;font-weight:700;color:var(--rose)}
   background:rgba(245,199,89,.16);color:var(--gold);font-weight:800;font-size:14px;margin-top:1px}
 .feebar p{font-size:13.5px;color:var(--ink-dim);line-height:1.6}
 .feebar p b{color:var(--ink)}
-.feebar.stale{border-color:rgba(255,185,74,.42);background:linear-gradient(118deg,rgba(255,185,74,.12),rgba(255,63,130,.05))}
-.feebar.stale .ic{background:rgba(255,185,74,.2);color:var(--warn)}
 
 /* ============================================================
    budget studio
@@ -494,6 +492,9 @@ details.known ul{margin:0;padding:0 var(--sp-5) var(--sp-5) calc(var(--sp-5) + 1
 details.known li::marker{color:var(--gold)}
 footer{border-top:1px solid var(--line-2);padding:var(--sp-6) 0 calc(var(--sp-7) + var(--safe-b));font-size:12px;color:var(--ink-faint)}
 .frow{display:flex;flex-wrap:wrap;gap:var(--sp-5);justify-content:space-between;align-items:flex-start}
+.credit{display:flex;flex-direction:column;align-items:flex-start;gap:10px;font-size:12.5px}
+.credit a{color:var(--gold);font-weight:700;border-bottom:1px solid rgba(245,199,89,.35);transition:border-color .2s,color .2s}
+.credit a:hover{color:var(--marigold);border-bottom-color:var(--marigold)}
 footer b{font-family:var(--display);font-size:16px;color:var(--ink);font-weight:900}
 footer p{line-height:1.7}
 .marquee{overflow:hidden;border-block:1px solid var(--line-2);padding:10px 0;margin-top:clamp(18px,3vw,30px);

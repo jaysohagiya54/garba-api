@@ -11,7 +11,6 @@ const districtRaw = `__DISTRICT_DATA__`;
 const research = window.EVENT_RESEARCH || {};
 const BUILD = window.GG_BUILD || {};
 const DATA_DATE = BUILD.dataDate || null;
-const STALE_AFTER_DAYS = 2;
 
 /* ---------- helpers ---------- */
 const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
@@ -105,25 +104,11 @@ const BANDS = [
   { lo: 4000, hi: 1e9,   label: 'Splurge', sub: '₹4,000 and up' }
 ];
 
-/* ---------- how old is this data? ---------- */
-const CHECKED = DATA_DATE ? fmtDate(DATA_DATE, { day: 'numeric', month: 'long', year: 'numeric' }) : 'an earlier date';
-function dataAgeDays() {
-  if (!DATA_DATE) return null;
-  const then = new Date(DATA_DATE + 'T12:00:00Z').getTime();
-  return Math.floor((Date.now() - then) / 86400000);
-}
-function paintStaleness() {
-  const age = dataAgeDays();
+/* ---------- updated stamp ---------- */
+const CHECKED = DATA_DATE ? fmtDate(DATA_DATE, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+function paintUpdated() {
   const stamp = $('dateStamp');
-  if (stamp) {
-    stamp.innerHTML = age === null ? ''
-      : `Prices as checked on <b>${esc(CHECKED)}</b>${age <= 0 ? ' · today' : age === 1 ? ' · yesterday' : ` · ${age} days ago`}`;
-  }
-  const bar = $('staleBar');
-  if (!bar) return;
-  if (age === null || age <= STALE_AFTER_DAYS) { bar.hidden = true; return; }
-  bar.hidden = false;
-  $('staleText').innerHTML = `<b>This price list is ${age} days old.</b> It was checked on ${esc(CHECKED)} and does not update by itself — phases sell out and organisers revise rates during Navratri. Treat these as a guide and confirm the current price on the official listing before you pay.`;
+  if (stamp) stamp.innerHTML = CHECKED ? `Updated <b>${esc(CHECKED)}</b>` : '';
 }
 
 /* ---------- toast ---------- */
@@ -357,11 +342,11 @@ function openEvent(id) {
   $('mVenue').textContent = d.venue || 'Venue to be announced';
   $('mLink').href = d.url;
   $('mLink').textContent = 'Open on ' + d.platform + ' ↗';
-  $('mChecked').textContent = `Checked ${CHECKED}. ${d.nightsKnown ? 'Nights: ' + d.nights.map(x => fmtDate(x, { day: 'numeric' })).join(', ') + ' Oct.' : 'Nights are not published on this listing.'}`;
+  $('mChecked').textContent = `${CHECKED ? 'Updated ' + CHECKED + '. ' : ''} ${d.nightsKnown ? 'Nights: ' + d.nights.map(x => fmtDate(x, { day: 'numeric' })).join(', ') + ' Oct.' : 'Nights are listed on the official page.'}`;
   $('dateList').innerHTML = dates.map(iso => `<button class="dbtn" data-date="${iso}" aria-pressed="${iso === activeDate}">
       <span class="dd">${fmtDate(iso, { weekday: 'short' })}</span><span class="dn">${fmtDate(iso, { day: 'numeric' })}</span><span class="dm">${fmtDate(iso, { month: 'short' })}</span></button>`).join('');
   $('mIntro').textContent = dates.length
-    ? 'Pick a night to see every pass category checked for that session.'
+    ? 'Pick a night to see every pass category for that session.'
     : (d.catalogue.length
         ? `${d.catalogue.length} pass categories at official rates, cheapest first.`
         : 'Category prices are not published on this listing — the advertised price and official link are below.');
@@ -427,7 +412,7 @@ function renderSession() {
       + d.catalogue.map((c, i) => catRowHTML(c, i)).join('');
   } else {
     $('catList').innerHTML = `<div class="unavail">
-      <h4>${activeDate ? 'Categories not checked for this night' : 'Category prices not published'}</h4>
+      <h4>${activeDate ? 'Categories for this night are on the official page' : 'Category prices not published'}</h4>
       <p>${esc((activeSession && (activeSession.blockedReason || activeSession.status)) || d.r.blockedReason || 'This listing does not publish a category breakdown. Choose your night and tier on the official page.')}</p>
       ${d.base !== null ? `<p style="margin-top:12px;color:var(--ink)">Advertised from <b class="tnum" style="color:var(--gold)">${inr(d.base)}</b>${d.onwards ? ' onwards' : ''}.</p>` : ''}
     </div>`;
@@ -638,4 +623,4 @@ stats();
 render();
 updateTray();
 paintSearch();
-paintStaleness();
+paintUpdated();
