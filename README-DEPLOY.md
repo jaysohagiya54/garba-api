@@ -48,17 +48,14 @@ Render dashboard → **New** → **Web Service** → connect the repo.
 | Build command | *(leave empty)* |
 | Start command | `node server.js` |
 | Health check path | `/healthz` |
-| Instance type | Starter ($7/mo) — see note below |
-
-`render.yaml` is included, so **New → Blueprint** will fill all of this in
-for you instead.
+| Instance type | **Free** |
 
 ### 3. Environment variables
 
 | Key | Value |
 |---|---|
 | `INGEST_TOKEN` | a long random string — this is your upload password |
-| `DATA_DIR` | `/var/data` (only if you attach a disk) |
+| `DATA_DIR` | **leave unset on the free plan** — there is no disk to point it at |
 | `POLL_HOURS` | how often to refresh District. Default `12` (twice a day). `0` disables |
 
 Generate a token:

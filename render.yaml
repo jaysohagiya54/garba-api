@@ -1,14 +1,40 @@
+# Render Blueprints are a PAID feature, so this file is NOT what you use on the
+# free plan. Create the service by hand instead:
+#
+#   New -> Web Service -> connect this repo
+#     Runtime           Node
+#     Build command     (leave empty — there are no dependencies)
+#     Start command     node server.js
+#     Health check path /healthz
+#     Instance type     Free
+#
+#   Environment variables:
+#     INGEST_TOKEN   a long random string
+#     POLL_HOURS     12
+#     PUBLIC_URL     https://<your-service>.onrender.com   (set after first deploy)
+#
+#   Do NOT set DATA_DIR on the free plan: there is no disk to point it at, and
+#   the default (./var inside the service) works. It is wiped on restart, which
+#   only costs pushed BookMyShow data — District re-polls itself on boot.
+#
+# This file is kept for the day you move to a paid instance, where it describes
+# a Starter instance with a 1 GB disk so pushed data survives restarts.
+# Nothing reads it until you actually run a Blueprint deploy.
 services:
   - type: web
-    name: garba-guide
+    name: garba-guide-api
     runtime: node
-    plan: starter
-    buildCommand: "echo no build step"
+    plan: starter          # paid; for free tier use "free" and delete the disk block
+    buildCommand: ""
     startCommand: "node server.js"
     healthCheckPath: /healthz
     envVars:
       - key: INGEST_TOKEN
         generateValue: true
+      - key: POLL_HOURS
+        value: "12"
+      - key: PUBLIC_URL
+        sync: false        # set in the dashboard after the first deploy
       - key: DATA_DIR
         value: /var/data
     disk:
