@@ -1,0 +1,12 @@
+{
+  "name": "garba-guide-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ahmedabad Navratri pass prices — public site plus browser-fed price ingest",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "selftest": "node selftest.js"
+  },
+  "engines": { "node": ">=20" }
+}

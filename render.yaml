@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: garba-guide
+    runtime: node
+    plan: starter
+    buildCommand: "echo no build step"
+    startCommand: "node server.js"
+    healthCheckPath: /healthz
+    envVars:
+      - key: INGEST_TOKEN
+        generateValue: true
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: prices
+      mountPath: /var/data
+      sizeGB: 1
