@@ -410,6 +410,8 @@ function renderSession() {
   const d = activeEvent;
   const day = d.sessions.filter(s => s.date === activeDate);
   $('sessTitle').textContent = activeDate ? fmtDate(activeDate, { weekday: 'long', day: 'numeric', month: 'long' }) : 'Pass categories';
+  /* with no per-night sessions the heading above already says it; drop the row */
+  $('sessHead').hidden = !day.length;
   const wrap = $('timeWrap'), sel = $('sessionTime');
   wrap.hidden = day.length < 2;
   sel.innerHTML = day.map((s, i) => `<option value="${i}">${esc(s.time || 'Session ' + (i + 1))}</option>`).join('');
