@@ -10,7 +10,6 @@ const bmsRaw = `__BMS_DATA__`;
 const districtRaw = `__DISTRICT_DATA__`;
 const research = window.EVENT_RESEARCH || {};
 const BUILD = window.GG_BUILD || {};
-const DATA_DATE = BUILD.dataDate || null;
 
 /* ---------- helpers ---------- */
 const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
@@ -103,13 +102,6 @@ const BANDS = [
   { lo: 2000, hi: 3999,  label: 'Premium', sub: '₹2,000–3,999' },
   { lo: 4000, hi: 1e9,   label: 'Splurge', sub: '₹4,000 and up' }
 ];
-
-/* ---------- updated stamp ---------- */
-const CHECKED = DATA_DATE ? fmtDate(DATA_DATE, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-function paintUpdated() {
-  const stamp = $('dateStamp');
-  if (stamp) stamp.innerHTML = CHECKED ? `Updated <b>${esc(CHECKED)}</b>` : '';
-}
 
 /* ---------- toast ---------- */
 let toastTimer;
@@ -342,7 +334,9 @@ function openEvent(id) {
   $('mVenue').textContent = d.venue || 'Venue to be announced';
   $('mLink').href = d.url;
   $('mLink').textContent = 'Open on ' + d.platform + ' ↗';
-  $('mChecked').textContent = `${CHECKED ? 'Updated ' + CHECKED + '. ' : ''} ${d.nightsKnown ? 'Nights: ' + d.nights.map(x => fmtDate(x, { day: 'numeric' })).join(', ') + ' Oct.' : 'Nights are listed on the official page.'}`;
+  $('mChecked').textContent = d.nightsKnown
+    ? 'Nights: ' + d.nights.map(x => fmtDate(x, { day: 'numeric' })).join(', ') + ' Oct.'
+    : 'Nights are listed on the official page.';
   $('dateList').innerHTML = dates.map(iso => `<button class="dbtn" data-date="${iso}" aria-pressed="${iso === activeDate}">
       <span class="dd">${fmtDate(iso, { weekday: 'short' })}</span><span class="dn">${fmtDate(iso, { day: 'numeric' })}</span><span class="dm">${fmtDate(iso, { month: 'short' })}</span></button>`).join('');
   $('mIntro').textContent = dates.length
@@ -623,4 +617,3 @@ stats();
 render();
 updateTray();
 paintSearch();
-paintUpdated();
