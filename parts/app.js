@@ -76,6 +76,7 @@ const data = [
   d.official = singles.length > 0 || perHead.length > 0;
   d.spread = perHead.length ? [Math.min(...perHead), Math.max(...perHead)] : null;
   d.soldOut = d.catalogue.filter(c => c.availability === 'Sold out').length;
+  d.allSoldOut = d.catalogue.length > 0 && d.soldOut === d.catalogue.length;
   d.onwards = d.onwards || catPrices.length > 1 || d.catalogue.length > 1;
   const sessionDates = [...new Set(d.sessions.map(s => s.date))].sort();
   d.nights = sessionDates.length ? sessionDates : (parseDateText(d.dateText) || []);
@@ -221,19 +222,20 @@ function cardHTML(d) {
   const meta = d.catalogue.length
     ? `${d.catalogue.length} categor${d.catalogue.length === 1 ? 'y' : 'ies'}${d.soldOut ? ' · ' + d.soldOut + ' sold out' : ''}`
     : (d.catCount ? `${d.catCount} categories priced` : 'Nights &amp; categories');
-  return `<article class="card" data-id="${d.id}">
+  return `<article class="card${d.allSoldOut ? ' gone' : ''}" data-id="${d.id}">
     <button class="fav" data-fav="${d.id}" aria-pressed="${favs.has(d.id)}" aria-label="Shortlist ${esc(d.name)}">${favs.has(d.id) ? '♥' : '♡'}</button>
-    <button class="media" data-open="${d.id}" aria-haspopup="dialog" aria-label="Open ${esc(d.name)} details" style="width:100%;display:block">
+    <button class="media" data-open="${d.id}" aria-haspopup="dialog" aria-label="Open ${esc(d.name)} details">
       ${posterHTML(d)}
       <span class="plat ${d.platform === 'District' ? 'd' : 'b'}">${d.platform}</span>
+      ${d.allSoldOut ? '<span class="ribbon">sold out</span>' : ''}
       <span class="card-nights">◉ ${esc(nightTxt)}</span>
     </button>
-    <button class="body" data-open="${d.id}" style="width:100%;text-align:left">
+    <button class="body" data-open="${d.id}">
       <span class="title">${esc(d.name)}</span>
       <span class="venue">${esc(d.venue || 'Venue to be announced')}</span>
       ${catTags}
     </button>
-    <button class="pricebox" data-open="${d.id}" style="width:auto;text-align:left;display:block">${priceBlock}</button>
+    <button class="pricebox" data-open="${d.id}">${priceBlock}</button>
     <button class="go" data-open="${d.id}">${meta} →</button>
   </article>`;
 }
@@ -276,8 +278,9 @@ function render() {
     html += `<div class="group-head"><h3>${undated.length} more &mdash; nights not published, likely running</h3><span class="ln"></span></div>` + undated.map(cardHTML).join('');
   }
   if (!visible.length) {
-    html = `<div class="empty"><span class="mo">✹</span><h3>Nothing in that range</h3>
-      <p>Try a higher budget, clear the night filter, or search a different event.</p></div>`;
+    html = `<div class="empty"><span class="mo">✹</span><h3>Nothing matches</h3>
+      <p>No pass fits every filter you have on. Widen the budget, pick another night, or start over.</p>
+      <button class="btn btn-gold" data-rm-all type="button">Clear all filters</button></div>`;
   }
   $('cards').innerHTML = html;
   wireFallbacks($('cards'));
@@ -290,6 +293,7 @@ function render() {
   $('feeSummary').innerHTML = `Official rates for <b>${officialN}</b> of ${data.length} listings &middot; <b>${rows}</b> pass categories &middot; no booking fees included`;
   bumpFit();
   renderBands();
+  renderChips();
 }
 
 function reveal() {
@@ -432,6 +436,7 @@ function closeEvent() { if (dlg.open) dlg.close(); }
 
 /* ---------- events ---------- */
 $('cards').addEventListener('click', e => {
+  if (e.target.closest('[data-rm-all]')) { $('resetBtn').click(); return; }
   const f = e.target.closest('[data-fav]');
   if (f) {
     const id = Number(f.dataset.fav);
@@ -480,7 +485,7 @@ $('bands').addEventListener('click', e => {
   render();
 });
 let searchTimer;
-$('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(render, 120); });
+$('search').addEventListener('input', () => { paintSearch(); clearTimeout(searchTimer); searchTimer = setTimeout(render, 120); });
 $('platform').addEventListener('change', render);
 $('sort').addEventListener('change', render);
 $('budget').addEventListener('input', () => {
@@ -492,7 +497,7 @@ $('budget').addEventListener('input', () => {
 $('resetBtn').onclick = () => {
   activeBand = null; activeNight = null; onlyFav = false; budget = 6000;
   $('budget').value = 6000; $('search').value = ''; $('platform').value = 'all'; $('sort').value = 'low';
-  paintSlider(); renderNights(); render(); updateTray();
+  paintSlider(); paintSearch(); renderNights(); render(); updateTray();
   toast('Filters cleared');
 };
 $('surpriseBtn').onclick = () => {
@@ -507,9 +512,69 @@ $('themeBtn').onclick = () => {
 };
 if (document.documentElement.dataset.theme === 'day') $('themeBtn').textContent = '☀';
 addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sheet.classList.contains('open')) { openSheet(false); return; }
   if (e.key === '/' && document.activeElement !== $('search') && !dlg.open) { e.preventDefault(); $('search').focus(); }
 });
-addEventListener('scroll', () => { $('hdr').classList.toggle('lift', scrollY > 12); }, { passive: true });
+addEventListener('scroll', () => {
+  $('hdr').classList.toggle('lift', scrollY > 12);
+  $('toTop').classList.toggle('on', scrollY > 700);
+}, { passive: true });
+$('toTop').onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+
+/* ---------- search clear ---------- */
+function paintSearch() {
+  $('searchWrap').classList.toggle('has', $('search').value.length > 0);
+}
+$('searchClear').onclick = () => {
+  $('search').value = '';
+  paintSearch(); render();
+  $('search').focus();
+};
+
+/* ---------- filter sheet (phones) ---------- */
+const sheet = $('controls'), scrim = $('ctlScrim');
+function openSheet(on) {
+  sheet.classList.toggle('open', on);
+  scrim.classList.toggle('on', on);
+  $('filterBtn').setAttribute('aria-expanded', String(on));
+  document.body.style.overflow = on ? 'hidden' : '';
+}
+$('filterBtn').onclick = () => openSheet(!sheet.classList.contains('open'));
+$('sheetDone').onclick = () => openSheet(false);
+scrim.onclick = () => openSheet(false);
+
+/* ---------- active filters ---------- */
+function activeFilters() {
+  const out = [];
+  const q = $('search').value.trim();
+  if (q) out.push({ k: 'q', label: '“' + q + '”' });
+  if ($('platform').value !== 'all') out.push({ k: 'plat', label: $('platform').value });
+  if (activeNight) out.push({ k: 'night', label: fmtDate(activeNight, { day: 'numeric', month: 'short' }) });
+  if (activeBand !== null) out.push({ k: 'band', label: BANDS[activeBand].label + ' · ' + BANDS[activeBand].sub });
+  else if (budget < 6000) out.push({ k: 'budget', label: 'under ' + inr(budget) });
+  if (onlyFav) out.push({ k: 'fav', label: 'shortlist only' });
+  return out;
+}
+function renderChips() {
+  const f = activeFilters();
+  $('filterBtn').dataset.n = String(f.length);
+  $('activeChips').innerHTML = f.length
+    ? f.map(x => `<button class="achip" data-rm="${x.k}" type="button" aria-label="Remove filter ${esc(x.label)}">${esc(x.label)}<span class="x" aria-hidden="true">×</span></button>`).join('')
+      + (f.length > 1 ? '<button class="achip clear" data-rm="all" type="button">Clear all</button>' : '')
+    : '';
+}
+$('activeChips').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]');
+  if (!b) return;
+  const k = b.dataset.rm;
+  if (k === 'q' || k === 'all') { $('search').value = ''; paintSearch(); }
+  if (k === 'plat' || k === 'all') $('platform').value = 'all';
+  if (k === 'night' || k === 'all') { activeNight = null; renderNights(); }
+  if (k === 'band' || k === 'all') activeBand = null;
+  if (k === 'budget' || k === 'all') { budget = 6000; $('budget').value = 6000; paintSlider(); }
+  if (k === 'fav' || k === 'all') onlyFav = false;
+  render(); updateTray();
+});
 
 /* ---------- shortlist tray ---------- */
 function updateTray() {
@@ -570,4 +635,5 @@ renderNights();
 stats();
 render();
 updateTray();
+paintSearch();
 paintStaleness();

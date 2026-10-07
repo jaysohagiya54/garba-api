@@ -10,7 +10,7 @@
     <div class="brand"><span class="mark" aria-hidden="true"><span>&#10039;</span></span>garba guide</div>
     <div class="navtools">
       <span class="navdate">Ahmedabad &middot; Navratri 2026</span>
-      <button class="chip-btn" id="themeBtn" aria-label="Switch between night and day theme">&#9789;</button>
+      <button class="iconbtn" id="themeBtn" aria-label="Switch between night and day theme">&#9789;</button>
     </div>
   </div>
 </header>
@@ -116,17 +116,26 @@
     <div class="toolbar">
       <h2 class="sr" id="catalog-title">Garba pass listings</h2>
       <div class="tb-row">
-        <div class="search">
+        <div class="search" id="searchWrap">
           <span class="mg" aria-hidden="true">&#9906;</span>
           <label class="sr" for="search">Search event, artist or venue</label>
-          <input id="search" type="search" placeholder="Search an event, artist or venue&hellip;" autocomplete="off">
+          <input id="search" type="search" placeholder="Search an event or venue&hellip;" autocomplete="off" enterkeyhint="search">
+          <button class="clr" id="searchClear" type="button" aria-label="Clear search">&times;</button>
         </div>
-        <div class="sel"><label class="sr" for="platform">Platform</label>
-          <select id="platform"><option value="all">All platforms</option><option value="BookMyShow">BookMyShow</option><option value="District">District</option></select></div>
-        <div class="sel"><label class="sr" for="sort">Sort</label>
-          <select id="sort"><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="name">Name A&ndash;Z</option><option value="detail">Most price detail</option></select></div>
+        <button class="filterbtn" id="filterBtn" type="button" data-n="0" aria-expanded="false" aria-controls="controls">
+          <span aria-hidden="true">&#9776;</span> Filters
+        </button>
+        <div class="controls" id="controls">
+          <span class="sheet-title">Filter &amp; sort</span>
+          <div class="sel"><label class="sr" for="platform">Platform</label>
+            <select id="platform"><option value="all">All platforms</option><option value="BookMyShow">BookMyShow</option><option value="District">District</option></select></div>
+          <div class="sel"><label class="sr" for="sort">Sort</label>
+            <select id="sort"><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="name">Name A&ndash;Z</option><option value="detail">Most price detail</option></select></div>
+          <button class="sheet-done" id="sheetDone" type="button">Show results</button>
+        </div>
       </div>
       <div class="nights" id="nights" role="group" aria-label="Filter by night"></div>
+      <div class="activechips" id="activeChips" role="group" aria-label="Active filters"></div>
       <div class="statusline">
         <span id="resultCount" aria-live="polite"></span>
         <span id="feeSummary"></span>
@@ -206,6 +215,9 @@
   </div>
 </dialog>
 
+
+<div class="ctl-scrim" id="ctlScrim" aria-hidden="true"></div>
+<button class="totop" id="toTop" type="button" aria-label="Back to top">&#8593;</button>
 
 <div class="tray" id="tray">
   <span class="cnt tnum" id="trayCount">0</span>

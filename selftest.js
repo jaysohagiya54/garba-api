@@ -55,10 +55,21 @@ child.stderr.on('data', d => { serverLog += d; });
   console.log('\n-- status --');
   const st = await (await fetch(BASE + '/api/status')).json();
   console.log('      ' + JSON.stringify(st.counts) + ' posters=' + st.posters + ' dataDate=' + st.dataDate);
-  ck(st.counts.listings === 86, 'knows 86 listings');
-  ck(st.counts.priced === 85, 'has 85 priced listings, got ' + st.counts.priced);
-  ck(st.counts.categories === 385, 'has 385 categories, got ' + st.counts.categories);
-  ck(st.posters === 17, 'extracted 17 posters, got ' + st.posters);
+  /* expectations derived from the bundled snapshot, so a price refresh cannot
+     fail the suite merely by changing the counts */
+  const snap = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'snapshot.json'), 'utf8'));
+  const rowCount = f => fs.readFileSync(path.join(__dirname, 'data', f), 'utf8').trim().split('\n').length;
+  const exp = {
+    listings: rowCount('bms.txt') + rowCount('district.txt'),
+    priced: Object.values(snap).filter(e => (e.catalogue || []).length).length,
+    categories: Object.values(snap).reduce((n, e) => n + ((e.catalogue || []).length), 0),
+    posters: Object.values(snap).filter(e => typeof e.posterAsset === 'string' && e.posterAsset.startsWith('data:')).length,
+  };
+  console.log('      expected from snapshot: ' + JSON.stringify(exp));
+  ck(st.counts.listings === exp.listings, 'knows ' + exp.listings + ' listings, got ' + st.counts.listings);
+  ck(st.counts.priced === exp.priced, 'has ' + exp.priced + ' priced listings, got ' + st.counts.priced);
+  ck(st.counts.categories === exp.categories, 'has ' + exp.categories + ' categories, got ' + st.counts.categories);
+  ck(st.posters === exp.posters, 'extracted ' + exp.posters + ' posters, got ' + st.posters);
   ck(st.ingestConfigured === true, 'ingest token is configured');
   ck(st.gzipBytes < st.pageBytes, 'gzip is smaller than raw (' + (st.gzipBytes / 1024).toFixed(0) + 'KB vs ' + (st.pageBytes / 1024).toFixed(0) + 'KB)');
 
